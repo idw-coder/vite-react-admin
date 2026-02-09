@@ -3,8 +3,8 @@ import tailwindcss from 'tailwindcss';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-export default defineConfig(({ mode }) => ({
-  base: mode === 'production' ? '/admin/' : '/',
+export default defineConfig({
+  base: '/admin/',
   plugins: [react()],
   build: {
     outDir: '../express-mysql-docker/backend/public',
@@ -20,4 +20,4 @@ export default defineConfig(({ mode }) => ({
       '@': path.resolve(__dirname, './src'),
     },
   },
-}));
+});
