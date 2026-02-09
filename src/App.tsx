@@ -49,7 +49,7 @@ function App() {
   }
 
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/admin">
       <div className="h-full">
         <Routes>
           <Route path="/" element={<Layout />}>
