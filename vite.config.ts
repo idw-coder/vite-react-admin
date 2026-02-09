@@ -7,7 +7,7 @@ export default defineConfig({
   base: '/admin/',
   plugins: [react()],
   build: {
-    outDir: '../express-mysql-docker/backend/public',
+    outDir: '../backend/public',
     emptyOutDir: true,
   },
   css: {
