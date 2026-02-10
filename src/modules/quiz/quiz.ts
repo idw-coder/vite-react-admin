@@ -1,8 +1,3 @@
-/**
- * クイズ関連の型定義
- * API（Laravel/Express）の quiz, quiz_choice, quiz_category に合わせる
- */
-
 export interface QuizCategory {
   id: number
   slug: string
@@ -18,6 +13,12 @@ export interface QuizChoice {
   is_correct: boolean
 }
 
+export interface QuizTag {
+  id: number
+  slug: string
+  name: string
+}
+
 export interface Quiz {
   id: number
   slug: string
@@ -26,11 +27,11 @@ export interface Quiz {
   category_id: number
   author_id?: number
   choices?: QuizChoice[]
+  tags?: QuizTag[]
   created_at?: string
   updated_at?: string
 }
 
-/** クイズ作成・更新時のリクエスト用（選択肢は choice_text, is_correct） */
 export interface QuizCreateParams {
   slug: string
   question: string
@@ -38,6 +39,7 @@ export interface QuizCreateParams {
   category_id: number
   author_id?: number
   choices: { choice_text: string; is_correct: boolean }[]
+  tags?: string[]
 }
 
 export type QuizUpdateParams = Partial<QuizCreateParams>

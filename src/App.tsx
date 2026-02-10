@@ -10,6 +10,7 @@ import QuizList from './pages/QuizList';
 import QuizEdit from './pages/QuizEdit';
 import { useAuthStore } from './stores/useAuthStore';
 import { authRepository } from './modules/auth/auth.repository';
+import TagManage from './pages/TagManage';
 
 function App() {
   const { setAuth, clearAuth, isAuthenticated } = useAuthStore();
@@ -60,6 +61,7 @@ function App() {
             <Route path="/quizzes" element={<QuizList />} />
             <Route path="/quizzes/new" element={<QuizEdit />} />
             <Route path="/quizzes/:id/edit" element={<QuizEdit />} />
+            <Route path="/tags" element={<TagManage />} />
           </Route>
           <Route path="/signin" element={<Signin />} />
           <Route path="/signup" element={<Signup />} />

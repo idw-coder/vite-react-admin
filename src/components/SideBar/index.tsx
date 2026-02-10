@@ -2,7 +2,7 @@ import { FC } from 'react';
 import { Item } from './Item';
 import { NoteList } from '../notes/NoteList';
 import UserItem from './UserItem';
-import { Plus, Search, ListChecks } from 'lucide-react';
+import { Plus, Search, ListChecks, Tag } from 'lucide-react';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useNavigate } from 'react-router-dom';
 import { authRepository } from '@/modules/auth/auth.repository';
@@ -35,6 +35,7 @@ const SideBar: FC<Props> = ({ onSearchButtonClicked }) => {
             />
             <Item label="検索" icon={Search} onClick={onSearchButtonClicked} />
             <Item label="クイズ管理" icon={ListChecks} onClick={() => navigate('/quizzes')} />
+            <Item label="タグ管理" icon={Tag} onClick={() => navigate('/tags')} />
           </div>
           <div className="mt-4">
             <NoteList />

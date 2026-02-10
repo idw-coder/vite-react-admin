@@ -1,161 +1,175 @@
-import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { quizRepository } from '@/modules/quiz/quiz.repository'
-import type { QuizCategory } from '@/modules/quiz/quiz'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Plus, Trash2, Check, ArrowLeft } from 'lucide-react'
-import Editor from '@/components/notes/Editor'
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { quizRepository } from "@/modules/quiz/quiz.repository";
+import type { QuizCategory, QuizTag } from "@/modules/quiz/quiz";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Plus, Trash2, Check, ArrowLeft } from "lucide-react";
+import Editor from "@/components/notes/Editor";
 
-type ChoiceRow = { choice_text: string; is_correct: boolean }
+type ChoiceRow = { choice_text: string; is_correct: boolean };
 
-/** APIから取得した解説がプレーンテキストの場合、BlockNote用の1段落に変換する */
 function normalizeExplanationForEditor(value: string): string {
-  const trimmed = value?.trim() ?? ''
-  if (!trimmed) return trimmed
+  const trimmed = value?.trim() ?? "";
+  if (!trimmed) return trimmed;
   try {
-    const parsed = JSON.parse(trimmed) as unknown
-    if (Array.isArray(parsed)) return trimmed
+    const parsed = JSON.parse(trimmed) as unknown;
+    if (Array.isArray(parsed)) return trimmed;
   } catch {
     /* プレーンテキストとして扱う */
   }
   const block = [
     {
       id: crypto.randomUUID?.() ?? `block-${Date.now()}`,
-      type: 'paragraph' as const,
+      type: "paragraph" as const,
       props: {},
-      content: [{ type: 'text' as const, text: trimmed, styles: {} }],
+      content: [{ type: "text" as const, text: trimmed, styles: {} }],
       children: [],
     },
-  ]
-  return JSON.stringify(block)
+  ];
+  return JSON.stringify(block);
 }
 
-const emptyChoice = (): ChoiceRow => ({ choice_text: '', is_correct: false })
+const emptyChoice = (): ChoiceRow => ({ choice_text: "", is_correct: false });
 
 const QuizEdit = () => {
-  const { id } = useParams()
-  const navigate = useNavigate()
-  const isNew = id === 'new'
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const isNew = id === "new";
 
-  const [categories, setCategories] = useState<QuizCategory[]>([])
-  const [slug, setSlug] = useState('')
-  const [question, setQuestion] = useState('')
-  const [explanation, setExplanation] = useState('')
-  const [categoryId, setCategoryId] = useState<number | ''>('')
-  const [choices, setChoices] = useState<ChoiceRow[]>([emptyChoice(), emptyChoice()])
-  const [loading, setLoading] = useState(!isNew)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [categories, setCategories] = useState<QuizCategory[]>([]);
+  const [availableTags, setAvailableTags] = useState<QuizTag[]>([]);
+  const [slug, setSlug] = useState("");
+  const [question, setQuestion] = useState("");
+  const [explanation, setExplanation] = useState("");
+  const [categoryId, setCategoryId] = useState<number | "">("");
+  const [choices, setChoices] = useState<ChoiceRow[]>([emptyChoice(), emptyChoice()]);
+  const [tags, setTags] = useState<string[]>([]);
+  const [loading, setLoading] = useState(!isNew);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const loadCategories = async () => {
+    const loadMaster = async () => {
       try {
-        const list = await quizRepository.getCategories()
-        setCategories(list)
-        if (list.length > 0 && categoryId === '') {
-          setCategoryId(list[0].id)
+        const [categoryList, tagList] = await Promise.all([
+          quizRepository.getCategories(),
+          quizRepository.getTags(),
+        ]);
+        setCategories(categoryList);
+        if (categoryList.length > 0 && categoryId === "") {
+          setCategoryId(categoryList[0].id);
         }
+        setAvailableTags(tagList);
       } catch {
-        setError('カテゴリの取得に失敗しました')
+        setError("マスタデータの取得に失敗しました");
       }
-    }
-    loadCategories()
-  }, [])
+    };
+    loadMaster();
+  }, []);
 
   useEffect(() => {
-    if (isNew || !id) return
+    if (isNew || !id) return;
     const load = async () => {
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      setError(null);
       try {
-        const quiz = await quizRepository.getById(Number(id))
-        setSlug(quiz.slug)
-        setQuestion(quiz.question)
-        setExplanation(normalizeExplanationForEditor(quiz.explanation ?? ''))
-        setCategoryId(quiz.category_id)
+        const quiz = await quizRepository.getById(Number(id));
+        setSlug(quiz.slug);
+        setQuestion(quiz.question);
+        setExplanation(normalizeExplanationForEditor(quiz.explanation ?? ""));
+        setCategoryId(quiz.category_id);
         if (quiz.choices && quiz.choices.length > 0) {
           setChoices(
             quiz.choices.map((c) => ({
               choice_text: c.choice_text,
               is_correct: c.is_correct,
-            }))
-          )
+            })),
+          );
+        }
+        if (quiz.tags && quiz.tags.length > 0) {
+          setTags(quiz.tags.map((t) => t.slug));
         }
       } catch {
-        setError('クイズの取得に失敗しました')
+        setError("クイズの取得に失敗しました");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
-    load()
-  }, [id, isNew])
+    };
+    load();
+  }, [id, isNew]);
 
   const addChoice = () => {
-    setChoices((prev) => [...prev, emptyChoice()])
-  }
+    setChoices((prev) => [...prev, emptyChoice()]);
+  };
 
   const removeChoice = (index: number) => {
-    if (choices.length <= 2) return
-    setChoices((prev) => prev.filter((_, i) => i !== index))
-  }
+    if (choices.length <= 2) return;
+    setChoices((prev) => prev.filter((_, i) => i !== index));
+  };
 
-  const updateChoice = (index: number, field: 'choice_text' | 'is_correct', value: string | boolean) => {
+  const updateChoice = (
+    index: number,
+    field: "choice_text" | "is_correct",
+    value: string | boolean,
+  ) => {
     setChoices((prev) =>
-      prev.map((c, i) => (i === index ? { ...c, [field]: value } : c))
-    )
-  }
+      prev.map((c, i) => (i === index ? { ...c, [field]: value } : c)),
+    );
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const catId = typeof categoryId === 'number' ? categoryId : categories[0]?.id
+    e.preventDefault();
+    const catId = typeof categoryId === "number" ? categoryId : categories[0]?.id;
     if (catId == null) {
-      setError('カテゴリを選択してください')
-      return
+      setError("カテゴリを選択してください");
+      return;
     }
-    const validChoices = choices.filter((c) => c.choice_text.trim() !== '')
+    const validChoices = choices.filter((c) => c.choice_text.trim() !== "");
     if (validChoices.length < 2) {
-      setError('正解を含め、選択肢を2つ以上入力してください')
-      return
+      setError("正解を含め、選択肢を2つ以上入力してください");
+      return;
     }
     if (validChoices.every((c) => !c.is_correct)) {
-      setError('正解を1つ以上指定してください')
-      return
+      setError("正解を1つ以上指定してください");
+      return;
     }
 
-    setSaving(true)
-    setError(null)
+    setSaving(true);
+    setError(null);
     try {
       const payload = {
         slug: slug.trim(),
         question: question.trim(),
-        explanation: explanation.trim(), // BlockNote JSON または従来のプレーンテキスト
+        explanation: explanation.trim(),
         category_id: catId,
         choices: validChoices,
-      }
+        tags,
+      };
       if (isNew) {
-        const created = await quizRepository.create(payload)
-        navigate(`/quizzes/${created.id}/edit`, { replace: true })
+        const created = await quizRepository.create(payload);
+        navigate(`/quizzes/${created.id}/edit`, { replace: true });
       } else {
-        await quizRepository.update(Number(id), payload)
-        setError(null)
+        await quizRepository.update(Number(id), payload);
+        setError(null);
       }
     } catch (err: unknown) {
-      const msg = err && typeof err === 'object' && 'response' in err
-        ? (err as { response?: { data?: { error?: string } } }).response?.data?.error
-        : '保存に失敗しました'
-      setError(msg ?? '保存に失敗しました')
+      const msg =
+        err && typeof err === "object" && "response" in err
+          ? (err as { response?: { data?: { error?: string } } }).response?.data?.error
+          : "保存に失敗しました";
+      setError(msg ?? "保存に失敗しました");
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   if (loading && !isNew) {
     return (
       <div className="flex items-center justify-center min-h-[200px]">
         <p className="text-muted-foreground">読み込み中...</p>
       </div>
-    )
+    );
   }
 
   return (
@@ -163,7 +177,7 @@ const QuizEdit = () => {
       <div className="mb-6">
         <button
           type="button"
-          onClick={() => navigate('/quizzes')}
+          onClick={() => navigate("/quizzes")}
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -173,7 +187,7 @@ const QuizEdit = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>{isNew ? '新規クイズ' : 'クイズを編集'}</CardTitle>
+          <CardTitle>{isNew ? "新規クイズ" : "クイズを編集"}</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -206,10 +220,12 @@ const QuizEdit = () => {
             </div>
 
             <div>
-              <label className="text-sm font-medium block mb-2">解説（ノートと同じリッチエディタ）</label>
+              <label className="text-sm font-medium block mb-2">
+                解説（ノートと同じリッチエディタ）
+              </label>
               <div className="min-h-[200px] rounded-md border border-input overflow-hidden">
                 <Editor
-                  key={`explanation-${id ?? 'new'}`}
+                  key={`explanation-${id ?? "new"}`}
                   initialContent={explanation || undefined}
                   onChange={(value) => setExplanation(value)}
                 />
@@ -232,6 +248,39 @@ const QuizEdit = () => {
                 </select>
               </div>
             )}
+
+            <div>
+              <label className="text-sm font-medium block mb-2">タグ</label>
+              {availableTags.length === 0 ? (
+                <p className="text-xs text-muted-foreground">タグが登録されていません</p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {availableTags.map((tag) => {
+                    const selected = tags.includes(tag.slug);
+                    return (
+                      <button
+                        key={tag.slug}
+                        type="button"
+                        onClick={() =>
+                          setTags((prev) =>
+                            selected
+                              ? prev.filter((s) => s !== tag.slug)
+                              : [...prev, tag.slug],
+                          )
+                        }
+                        className={`rounded-full px-3 py-1 text-sm border transition-colors ${
+                          selected
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-muted text-muted-foreground border-input hover:bg-muted/70"
+                        }`}
+                      >
+                        {tag.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
 
             <div>
               <div className="flex items-center justify-between mb-2">
@@ -260,8 +309,8 @@ const QuizEdit = () => {
                           prev.map((c, i) => ({
                             ...c,
                             is_correct: i === index,
-                          }))
-                        )
+                          })),
+                        );
                       }}
                       className="rounded-full border-input"
                       title="正解"
@@ -269,7 +318,7 @@ const QuizEdit = () => {
                     <Input
                       value={choice.choice_text}
                       onChange={(e) =>
-                        updateChoice(index, 'choice_text', e.target.value)
+                        updateChoice(index, "choice_text", e.target.value)
                       }
                       placeholder={`選択肢 ${index + 1}`}
                       className="flex-1"
@@ -298,12 +347,12 @@ const QuizEdit = () => {
                 className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
               >
                 <Check className="w-4 h-4" />
-                {saving ? '保存中...' : '保存'}
+                {saving ? "保存中..." : "保存"}
               </button>
               {!isNew && (
                 <button
                   type="button"
-                  onClick={() => navigate('/quizzes')}
+                  onClick={() => navigate("/quizzes")}
                   className="rounded-md border border-input px-4 py-2 text-sm font-medium hover:bg-muted"
                 >
                   キャンセル
@@ -314,7 +363,7 @@ const QuizEdit = () => {
         </CardContent>
       </Card>
     </div>
-  )
-}
+  );
+};
 
-export default QuizEdit
+export default QuizEdit;
