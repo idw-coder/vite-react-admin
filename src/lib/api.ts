@@ -1,11 +1,14 @@
 import axios from 'axios'
 
 const api = axios.create({
-  baseURL: 'http://localhost:8888/api',
+  baseURL: import.meta.env.PROD 
+    ? '/api'  // 本番環境: 相対パス（Nginx経由）
+    : 'http://localhost:8888/api',  // 開発環境
   headers: {
     'Content-Type': 'application/json',
   },
 })
+
 
 /**
  * リクエストインターセプター
