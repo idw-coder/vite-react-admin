@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import Layout from './Layout';
-import { Home } from './pages/Home';
+import { Dashboard } from './pages/Dashboard';
+import { NoteCreate } from './pages/NoteCreate';
 import Signin from './pages/Signin';
 import Signup from './pages/Signup';
 import NoteDetail from './pages/NoteDetail';
@@ -53,7 +54,8 @@ function App() {
       <div className="h-full">
         <Routes>
           <Route path="/" element={<Layout />}>
-            <Route index element={<Home />} />
+            <Route index element={<Dashboard />} />
+            <Route path="/notes/new" element={<NoteCreate />} />
             <Route path="/notes/:noteId" element={<NoteDetail />} />
             <Route path="/quizzes" element={<QuizList />} />
             <Route path="/quizzes/new" element={<QuizEdit />} />

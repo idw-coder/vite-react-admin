@@ -4,7 +4,6 @@ import { NoteList } from '../notes/NoteList';
 import UserItem from './UserItem';
 import { Plus, Search, ListChecks } from 'lucide-react';
 import { useAuthStore } from '@/stores/useAuthStore';
-import { useNoteStore } from '@/stores/useNoteStore';
 import { useNavigate } from 'react-router-dom';
 import { authRepository } from '@/modules/auth/auth.repository';
 
@@ -14,22 +13,12 @@ type Props = {
 
 const SideBar: FC<Props> = ({ onSearchButtonClicked }) => {
   const { user, clearAuth } = useAuthStore();
-  const { createNote } = useNoteStore();
   const navigate = useNavigate();
 
   const handleSignout = () => {
     authRepository.logout();
     clearAuth();
     navigate('/signin');
-  };
-
-  const handleCreateNote = async () => {
-    try {
-      const note = await createNote('無題');
-      navigate(`/notes/${note.id}`);
-    } catch {
-      console.error('ノートの作成に失敗しました');
-    }
   };
 
   if (!user) {
@@ -49,7 +38,7 @@ const SideBar: FC<Props> = ({ onSearchButtonClicked }) => {
           </div>
           <div className="mt-4">
             <NoteList />
-            <Item label="ノートを作成" icon={Plus} onClick={handleCreateNote} />
+            <Item label="ノートを作成" icon={Plus} onClick={() => navigate('/notes/new')} />
           </div>
         </div>
       </aside>

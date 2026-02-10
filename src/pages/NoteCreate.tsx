@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus } from 'lucide-react';
 import { useNoteStore } from '@/stores/useNoteStore';
 
-export function Home() {
+export function NoteCreate() {
   const [title, setTitle] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const { createNote } = useNoteStore();
@@ -35,7 +35,7 @@ export function Home() {
     <Card className="border-0 shadow-none w-1/2 m-auto">
       <CardHeader className="px-4 pb-3">
         <CardTitle className="text-lg font-medium">
-          新しいノートを作成してみましょう
+          新しいノートを作成
         </CardTitle>
       </CardHeader>
       <CardContent className="px-4">
