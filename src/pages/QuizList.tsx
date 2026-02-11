@@ -140,6 +140,18 @@ const QuizList = () => {
                   <p className="text-sm text-muted-foreground">
                     slug: {q.slug}
                   </p>
+                  {q.tags && q.tags.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {q.tags.map((tag) => (
+                        <span
+                          key={`${tag.id}-${tag.slug}`}
+                          className="inline-flex items-center rounded-md border border-input bg-background px-2 py-0.5 text-xs text-muted-foreground"
+                        >
+                          {tag.name ?? tag.slug}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </li>
