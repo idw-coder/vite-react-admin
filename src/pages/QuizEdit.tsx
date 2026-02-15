@@ -35,7 +35,8 @@ const emptyChoice = (): ChoiceRow => ({ choice_text: "", is_correct: false });
 const QuizEdit = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const isNew = id === "new";
+  // /quizzes/new ルートには :id がないため id は undefined。新規作成モードと判定する
+  const isNew = !id || id === "new";
 
   const [categories, setCategories] = useState<QuizCategory[]>([]);
   const [availableTags, setAvailableTags] = useState<QuizTag[]>([]);
