@@ -79,7 +79,7 @@ const QuizEdit = () => {
         setSlug(quiz.slug);
         setQuestion(quiz.question);
         setExplanation(normalizeExplanationForEditor(quiz.explanation ?? ""));
-        setCategoryId(quiz.category_id);
+        setCategoryId(Number(quiz.category_id));
         if (quiz.choices && quiz.choices.length > 0) {
           setChoices(
             quiz.choices.map((c) => ({
@@ -121,7 +121,11 @@ const QuizEdit = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const catId = typeof categoryId === "number" ? categoryId : categories[0]?.id;
+    const normalizedCategoryId =
+      categoryId === "" ? Number.NaN : Number(categoryId);
+    const catId = Number.isFinite(normalizedCategoryId)
+      ? normalizedCategoryId
+      : categories[0]?.id;
     if (catId == null) {
       setError("カテゴリを選択してください");
       return;
