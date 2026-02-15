@@ -58,8 +58,8 @@ const QuizEdit = () => {
           quizRepository.getTags(),
         ]);
         setCategories(categoryList);
-        if (categoryList.length > 0 && categoryId === "") {
-          setCategoryId(categoryList[0].id);
+        if (categoryList.length > 0) {
+          setCategoryId((prev) => (prev === "" ? categoryList[0].id : prev));
         }
         setAvailableTags(tagList);
       } catch {
